@@ -1,21 +1,25 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 import { gridStorePubSub } from "@/grid/store/gridStorePubSub";
-import React, { FunctionComponent, useSyncExternalStore } from "react";
+import React, { useSyncExternalStore } from "react";
 import { idGenerator } from "../Grid";
 
-interface CellPropsType {
+interface CellPropsType<TData = object> {
   gridName: string;
   cellKey: string;
   rowKey: string;
-  cellValue: string | number;
+  cellValue: TData[keyof TData];
+  cellRenderer?: {
+    [K in keyof TData]: (value: TData[keyof TData]) => React.ReactNode;
+  };
 }
 
-export const Cell: FunctionComponent<CellPropsType> = ({
+export const Cell = <TData extends object>({
   gridName,
   cellKey,
   cellValue,
+  cellRenderer,
   rowKey,
-}) => {
+}: CellPropsType<TData>) => {
   const id = idGenerator({ cellKey, gridName, rowKey });
 
   const val = useSyncExternalStore(
@@ -30,5 +34,9 @@ export const Cell: FunctionComponent<CellPropsType> = ({
     }
   );
 
-  return <div className="border">{val ? val : cellValue}</div>;
+  return (
+    <div className="border">
+      {val ?? cellRenderer?.[cellKey as keyof TData](cellValue)}
+    </div>
+  );
 };

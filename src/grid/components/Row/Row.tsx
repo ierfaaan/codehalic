@@ -1,13 +1,20 @@
-import { RealtimeData } from "@/socket/useRealtimeData";
-import React, { FunctionComponent } from "react";
 import { Cell } from "./_Cell";
 
-interface RowPropsType {
-  row: RealtimeData;
+interface RowPropsType<TData extends object> {
+  row: TData;
+  rowKey: string;
   gridName: string;
+  cellRenderer?: {
+    [K in keyof TData]: (value: TData[keyof TData]) => React.ReactNode;
+  };
 }
 
-export const Row: FunctionComponent<RowPropsType> = ({ row, gridName }) => {
+export const Row = <TData extends object>({
+  row,
+  rowKey,
+  cellRenderer,
+  gridName,
+}: RowPropsType<TData>) => {
   return (
     <div className="grid grid-cols-4 gap-4">
       {Object.keys(row).map((cellKey) => {
@@ -15,9 +22,10 @@ export const Row: FunctionComponent<RowPropsType> = ({ row, gridName }) => {
           <Cell
             gridName={gridName}
             key={cellKey}
-            rowKey={String(row["id"])}
+            cellRenderer={cellRenderer}
+            rowKey={String(row[rowKey as keyof TData])}
             cellKey={cellKey}
-            cellValue={row[cellKey as keyof RealtimeData]}
+            cellValue={row[cellKey as keyof TData]}
           />
         );
       })}

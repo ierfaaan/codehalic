@@ -1,42 +1,63 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
-import { RealtimeData } from "@/socket/useRealtimeData";
-import { RefObject, useEffect, useImperativeHandle } from "react";
+import { ReactNode, RefObject, useEffect, useImperativeHandle } from "react";
 import { Row } from "./Row/Row";
 import { gridStorePubSub } from "../store/gridStorePubSub";
 
-export interface GridRef {
+export interface GridRef<TData> {
   updateData: (
     rowKey: string,
-    cellKey: keyof RealtimeData,
-    cellValue: number
+    cellKey: keyof TData,
+    cellValue: TData[keyof TData]
   ) => void;
 }
 
-interface GridPropsType {
-  data?: RealtimeData[];
-  gridName: string;
-  gridRef?: RefObject<GridRef | null>;
+export interface Column<TData> {
+  id: keyof TData;
+  header: string;
+  cell: (value: TData[keyof TData]) => ReactNode;
 }
 
-export const idGenerator = ({
+interface GridPropsType<TData = {}> {
+  data?: TData[];
+  columns?: Column<TData>[];
+  registerUniqueKey?: keyof TData;
+  gridName: string;
+  gridRef?: RefObject<GridRef<TData> | null>;
+}
+
+export const idGenerator = <TData extends object>({
   cellKey,
   gridName,
   rowKey,
 }: {
   gridName: string;
   rowKey: string;
-  cellKey: string;
+  cellKey: keyof TData;
 }) => {
   const id = `${gridName}-cell-${rowKey}-${String(cellKey)}`;
   return id;
 };
 
-export const Grid = ({ data, gridRef, gridName }: GridPropsType) => {
+export const Grid = <TData extends {}>({
+  data,
+  gridRef,
+  columns,
+  gridName,
+  registerUniqueKey,
+}: GridPropsType<TData>) => {
+  const cellRenderer = columns?.reduce((prevData, currentItem) => {
+    return {
+      ...prevData,
+      [currentItem.id]: currentItem.cell,
+    };
+  }, {} as { [K in keyof TData]: Column<TData>["cell"] });
+
   useImperativeHandle(gridRef, () => {
     return {
       updateData(rowKey, cellKey, cellValue) {
         const id = idGenerator({ cellKey, gridName, rowKey });
-        gridStorePubSub(gridName).set(id, cellValue);
+        const components = cellRenderer?.[cellKey as keyof TData](cellValue);
+        gridStorePubSub(gridName).set(id, components);
       },
     };
   });
@@ -50,14 +71,21 @@ export const Grid = ({ data, gridRef, gridName }: GridPropsType) => {
   return (
     <div className="flex flex-col gap-8 text-4xl">
       <div className="grid grid-cols-4 gap-4 font-bold">
-        <h1>ID</h1>
-        <h1>X</h1>
-        <h1>Y</h1>
-        <h1>Z</h1>
+        {columns?.map((col) => (
+          <h1 key={String(col.id)}>{col.header}</h1>
+        ))}
       </div>
       <div className="flex flex-col gap-8">
-        {data?.map((item) => {
-          return <Row gridName={gridName} key={item.id} row={item} />;
+        {data?.map((item, index) => {
+          return (
+            <Row
+              key={index}
+              cellRenderer={cellRenderer}
+              rowKey={String(registerUniqueKey)}
+              row={item}
+              gridName={gridName}
+            />
+          );
         })}
       </div>
     </div>

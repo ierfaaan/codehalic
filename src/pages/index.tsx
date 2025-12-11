@@ -14,5 +14,18 @@ export default function Home() {
     });
   }, []);
 
-  return <Grid gridName="TEST" gridRef={myGridRef} data={snapshot} />;
+  return (
+    <Grid
+      registerUniqueKey="id"
+      gridName="TEST"
+      columns={[
+        { id: "id", header: "ID", cell: (value) => <div>{value} + TEST1</div> },
+        { id: "x", header: "X", cell: (value) => <div>{value} + TEST2</div> },
+        { id: "y", header: "Y", cell: (value) => <div>{value} + TEST3</div> },
+        { id: "z", header: "Z", cell: (value) => <div>{value} + TEST4</div> },
+      ]}
+      gridRef={myGridRef}
+      data={snapshot}
+    />
+  );
 }

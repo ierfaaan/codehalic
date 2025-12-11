@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 const gridStores = new Map();
 
 export const gridStorePubSub = (gridIdentifier: string) => {
@@ -18,7 +20,7 @@ export const gridStorePubSub = (gridIdentifier: string) => {
       return this.values.get(`${gridIdentifier}_${id}`);
     },
 
-    set(id: string, value: number) {
+    set(id: string, value: number | string | ReactNode | boolean) {
       this.values.set(`${gridIdentifier}_${id}`, value);
       const ls = this.listeners.get(`${gridIdentifier}_${id}`);
       if (ls) for (const l of ls) l();
