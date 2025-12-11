@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
-import { gridStorePubSub } from "@/grid/store/gridStorePubSub";
+import { gridStorePubSub } from "@/design/grid/store/gridStorePubSub";
 import React, { useSyncExternalStore } from "react";
 import { idGenerator } from "../Grid";
 
